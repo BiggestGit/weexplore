@@ -49,17 +49,63 @@ const LocationFinderDummy = ({ setCurrentLocation }) => {
   return null;
 };
 
+
+// TODO set user header?
+
 const client = axios.create({
   baseURL: 'http://localhost:3000'
 })
 
-const LocationMarker = ({ location, nearestFlag }) => {
+const submitLocation = async (description, lat, lon) => {
+  const payload = {
+    description, location: { lat, lon }
+  };
+  return client.post('/flags', payload);
+}
+
+const voteLocation = async (locationId) => {
+  console.log('voting', locationId);
+  return client.post(`/flags/${locationId}/vote`);
+}
+
+const LocationMarker = ({ location, nearestFlag, desc, setDesc }) => {
+  const [votes, setVotes] = useState(0);
+  useEffect(() => {
+    if (nearestFlag && nearestFlag.votes) {
+      setVotes(nearestFlag.votes.length);
+    }
+  }, [nearestFlag])
   if (nearestFlag) {
-    return <Popup position={[location.lat, location.lng]}>HERE YOU ARE nearest: {nearestFlag}</Popup>
+    console.log(nearestFlag);
+    return (
+      <Popup position={[location.lat, location.lng]}>
+        <div>{nearestFlag.description} +{votes}</div>
+        <input type="button" value="vote" onClick={() => {
+          voteLocation(nearestFlag.id)
+          setVotes(votes + 1);
+        }} />
+      </Popup>
+    )
   } else {
     return (
       <Popup position={[location.lat, location.lng]}>
-        Add New Location
+        <div>
+        <h3>Add location</h3>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          submitLocation(desc, location.lat, location.lng);
+        }}>
+          <div>
+          <input type="text" name="description" value={desc} onChange={e => {
+            e.preventDefault(); setDesc(e.target.value)}
+            }/>
+          </div>
+          <br />
+          <div>
+          <input type="submit" value="submit" />
+          </div>
+        </form>
+        </div>
       </Popup>
     )
   }
@@ -69,6 +115,8 @@ function App() {
   const [flags, setFlags] = useState([]);
   const [location, setLocation] = useState({ lat: 66.509936, lng: 25.725921});
   const [nearestFlag, setNearestFlag] = useState();
+
+  const [desc, setDesc] = useState('');
 
   useEffect(() => {
     client.get('/flags')
@@ -82,7 +130,7 @@ function App() {
       const dist = getDistanceFromLatLonInKm(flag.location.lat, flag.location.lon, location.lat, location.lng);
       if (dist < nearestDistance) {
         nearestDistance = dist;
-        nearest = flag.description;
+        nearest = flag;
       }
     }
     console.log(nearestDistance);
@@ -104,7 +152,7 @@ function App() {
           <Marker key={m.id} position={[m.location.lat, m.location.lon]}>
           </Marker>)}
         <LocationFinderDummy setCurrentLocation={setLocation}/>
-        <LocationMarker nearestFlag={nearestFlag} location={location} />
+        <LocationMarker nearestFlag={nearestFlag} location={location} desc={desc} setDesc={setDesc} />
     </StyledMap>
   );
 }
