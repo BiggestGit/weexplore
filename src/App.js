@@ -53,6 +53,18 @@ const client = axios.create({
   baseURL: 'http://localhost:3000'
 })
 
+const LocationMarker = ({ location, nearestFlag }) => {
+  if (nearestFlag) {
+    return <Popup position={[location.lat, location.lng]}>HERE YOU ARE nearest: {nearestFlag}</Popup>
+  } else {
+    return (
+      <Popup position={[location.lat, location.lng]}>
+        Add New Location
+      </Popup>
+    )
+  }
+}
+
 function App() {
   const [flags, setFlags] = useState([]);
   const [location, setLocation] = useState({ lat: 66.509936, lng: 25.725921});
@@ -67,14 +79,6 @@ function App() {
     let nearest = null;
     let nearestDistance = Infinity;
     for (let flag of flags) {
-      // var a = flag.location.lat - location.lat;
-      // var b = flag.location.lon - location.lng;
-
-      // var c = Math.sqrt( a*a + b*b );
-      // if (c < nearestDistance) {
-      //   nearest = flag.description;
-      //   nearestDistance = c;
-      // }
       const dist = getDistanceFromLatLonInKm(flag.location.lat, flag.location.lon, location.lat, location.lng);
       if (dist < nearestDistance) {
         nearestDistance = dist;
@@ -82,7 +86,7 @@ function App() {
       }
     }
     console.log(nearestDistance);
-    if (nearestDistance > 0.5) {
+    if (nearestDistance > 0.25) {
       setNearestFlag(null);
       return;
     }
@@ -100,7 +104,7 @@ function App() {
           <Marker key={m.id} position={[m.location.lat, m.location.lon]}>
           </Marker>)}
         <LocationFinderDummy setCurrentLocation={setLocation}/>
-        <Popup position={[location.lat, location.lng]}>HERE YOU ARE nearest: {nearestFlag}</Popup>
+        <LocationMarker nearestFlag={nearestFlag} location={location} />
     </StyledMap>
   );
 }
