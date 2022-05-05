@@ -9,8 +9,8 @@ import { useEffect, useState } from 'react';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  iconRetinaUrl: require('./graphics/big-flame.png'),
+  iconUrl: require('./graphics/big-flame.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
@@ -67,7 +67,7 @@ const LocationMarker = ({ location, nearestFlag }) => {
 
 function App() {
   const [flags, setFlags] = useState([]);
-  const [location, setLocation] = useState({ lat: 66.509936, lng: 25.725921});
+  const [location, setLocation] = useState({ lat: 66.509936, lon: 25.725921});
   const [nearestFlag, setNearestFlag] = useState();
 
   useEffect(() => {
@@ -79,7 +79,7 @@ function App() {
     let nearest = null;
     let nearestDistance = Infinity;
     for (let flag of flags) {
-      const dist = getDistanceFromLatLonInKm(flag.location.lat, flag.location.lon, location.lat, location.lng);
+      const dist = getDistanceFromLatLonInKm(flag.location.lat, flag.location.lon, location.lat, location.lon);
       if (dist < nearestDistance) {
         nearestDistance = dist;
         nearest = flag.description;
@@ -102,6 +102,7 @@ function App() {
         />
         {flags.map(m =>
           <Marker key={m.id} position={[m.location.lat, m.location.lon]}>
+            icon.options.shadowSize = [0,0];
           </Marker>)}
         <LocationFinderDummy setCurrentLocation={setLocation}/>
         <LocationMarker nearestFlag={nearestFlag} location={location} />
