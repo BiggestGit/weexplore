@@ -58,7 +58,7 @@ const client = axios.create({
 
 const submitLocation = async (description, lat, lon) => {
   const payload = {
-    description, location: { lat, lon }
+    id: (Math.random() * 1000).toString(),description, location: { lat, lon }
   };
   return client.post('/flags', payload);
 }
@@ -68,7 +68,29 @@ const voteLocation = async (locationId) => {
   return client.post(`/flags/${locationId}/vote`);
 }
 
-const LocationMarker = ({ location, nearestFlag, desc, setDesc }) => {
+const LocationForm = ({ location, setChanged}) => {
+  const [desc, setDesc] = useState('');
+
+  return (
+    <form onSubmit={(e) => {
+      e.preventDefault();
+      submitLocation(desc, location.lat, location.lng)
+        .then(() => setChanged(true));
+    }}>
+      <div>
+      <input type="text" name="description" value={desc} onChange={e => {
+        e.preventDefault(); setDesc(e.target.value)}
+        }/>
+      </div>
+      <br />
+      <div>
+      <input type="submit" value="submit" />
+      </div>
+    </form>
+  )
+}
+
+const LocationMarker = ({ location, nearestFlag, setChanged }) => {
   const [votes, setVotes] = useState(0);
   useEffect(() => {
     if (nearestFlag && nearestFlag.votes) {
@@ -82,7 +104,7 @@ const LocationMarker = ({ location, nearestFlag, desc, setDesc }) => {
         <div>{nearestFlag.description} +{votes}</div>
         <input type="button" value="vote" onClick={() => {
           voteLocation(nearestFlag.id)
-          setVotes(votes + 1);
+            .then(() => setChanged(true));
         }} />
       </Popup>
     )
@@ -91,20 +113,7 @@ const LocationMarker = ({ location, nearestFlag, desc, setDesc }) => {
       <Popup position={[location.lat, location.lng]}>
         <div>
         <h3>Add location</h3>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          submitLocation(desc, location.lat, location.lng);
-        }}>
-          <div>
-          <input type="text" name="description" value={desc} onChange={e => {
-            e.preventDefault(); setDesc(e.target.value)}
-            }/>
-          </div>
-          <br />
-          <div>
-          <input type="submit" value="submit" />
-          </div>
-        </form>
+        <LocationForm location={location} setChanged={setChanged}/>
         </div>
       </Popup>
     )
@@ -115,13 +124,15 @@ function App() {
   const [flags, setFlags] = useState([]);
   const [location, setLocation] = useState({ lat: 66.509936, lng: 25.725921});
   const [nearestFlag, setNearestFlag] = useState();
-
-  const [desc, setDesc] = useState('');
+  const [changed, setChanged] = useState(true);
 
   useEffect(() => {
-    client.get('/flags')
-      .then((res) => setFlags(res.data))
-  }, [])
+    if (changed) {
+      client.get('/flags')
+        .then((res) => setFlags(res.data))
+      setChanged(false)
+    }
+  }, [changed])
 
   useEffect(() => {
     let nearest = null;
@@ -153,7 +164,7 @@ function App() {
             icon.options.shadowSize = [0,0];
           </Marker>)}
         <LocationFinderDummy setCurrentLocation={setLocation}/>
-        <LocationMarker nearestFlag={nearestFlag} location={location} desc={desc} setDesc={setDesc} />
+        <LocationMarker nearestFlag={nearestFlag} location={location} setChanged={setChanged} />
     </StyledMap>
   );
 }
