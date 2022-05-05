@@ -67,7 +67,7 @@ const LocationMarker = ({ location, nearestFlag }) => {
 
 function App() {
   const [flags, setFlags] = useState([]);
-  const [location, setLocation] = useState({ lat: 66.509936, lon: 25.725921});
+  const [location, setLocation] = useState({ lat: 66.509936, lng: 25.725921});
   const [nearestFlag, setNearestFlag] = useState();
 
   useEffect(() => {
@@ -79,7 +79,7 @@ function App() {
     let nearest = null;
     let nearestDistance = Infinity;
     for (let flag of flags) {
-      const dist = getDistanceFromLatLonInKm(flag.location.lat, flag.location.lon, location.lat, location.lon);
+      const dist = getDistanceFromLatLonInKm(flag.location.lat, flag.location.lon, location.lat, location.lng);
       if (dist < nearestDistance) {
         nearestDistance = dist;
         nearest = flag.description;
