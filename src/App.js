@@ -56,9 +56,9 @@ const client = axios.create({
   baseURL: 'http://localhost:3000'
 })
 
-const submitLocation = async (description, lat, lon) => {
+const submitLocation = async (description, url, lat, lon) => {
   const payload = {
-    id: (Math.random() * 1000).toString(),description, location: { lat, lon }
+    id: (Math.random() * 1000).toString(),description, imageUrl: url, location: { lat, lon }
   };
   return client.post('/flags', payload);
 }
@@ -70,18 +70,27 @@ const voteLocation = async (locationId) => {
 
 const LocationForm = ({ location, setChanged}) => {
   const [desc, setDesc] = useState('');
+  const [url, setUrl] = useState('');
 
   return (
     <form onSubmit={(e) => {
       e.preventDefault();
-      submitLocation(desc, location.lat, location.lng)
+      submitLocation(desc, url, location.lat, location.lng)
         .then(() => setChanged(true));
     }}>
       <div>
-      <input type="text" name="description" value={desc} onChange={e => {
+      <div>Description</div>
+      <input id="desc" type="text" name="description" value={desc} onChange={e => {
         e.preventDefault(); setDesc(e.target.value)}
         }/>
       </div>
+      <div>
+      <div>Image Url</div>
+      <input id="imgurl" type="text" name="imgurl" value={url} onChange={e => {
+        e.preventDefault(); setUrl(e.target.value)}
+        }/>
+      </div>
+
       <br />
       <div>
       <input type="submit" value="submit" />
@@ -102,6 +111,9 @@ const LocationMarker = ({ location, nearestFlag, setChanged }) => {
     return (
       <Popup position={[location.lat, location.lng]}>
         <div>{nearestFlag.description} +{votes}</div>
+        <div>
+        <img alt="" width="200" src={nearestFlag.imageUrl} />
+        </div>
         <input type="button" value="vote" onClick={() => {
           voteLocation(nearestFlag.id)
             .then(() => setChanged(true));
